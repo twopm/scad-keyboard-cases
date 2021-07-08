@@ -8,7 +8,7 @@
 
 include <crkbd-common.scad>
 include <../keyboard-case.scad>
-
+include <case-18650.scad>
 theme = 3;
 wall_thickness = 2.5;
 plate_thickness = 3.2;   // (5mm - max diode height)
@@ -28,10 +28,10 @@ left_keys = [ for (i = crkbd_layout) if (key_pos(i).x < 8) i ];
 
 crkbd_tent_positions = [
     // [[X, Y], Angle, height]
-    [[4.8, -32.2], 180, depth_offset],
-    [[4.8, -77.0], 180, depth_offset],
-    [[115.5, -19.4], 90, depth_offset + plate_thickness],
-    [[140, -102], -30, depth_offset + plate_thickness],
+    // [[4.8, -32.2], 180, depth_offset],
+    // [[4.8, -77.0], 180, depth_offset],
+    // [[115.5, -19.4], 90, depth_offset + plate_thickness],
+    // [[140, -102], -30, depth_offset + plate_thickness],
     ];
 
 
@@ -43,7 +43,7 @@ module simple_micro_usb_hole(hole = true) {
     }
 }
 module simple_trrs_hole(hole = true) {
-    color("silver") {
+    color("red") {
         if (hole) {
             translate([0, 1, pcb_thickness+micro_usb_socket_height/2]) rotate([90, 0, 0])
                 roundedcube([micro_usb_hole_width, micro_usb_hole_height, 10], r=1.5, center=true, $fs=1);
@@ -62,7 +62,7 @@ module crkbd_case_holes(preview = false) {
         }
     }
     // TRRS connector - should update to a better shape hole
-    translate([145, -74.5, pcb_offset]) translate([0, 0, pcb_thickness]) rotate([0, 0, -90]) {
+    translate([145, -65.0, pcb_offset]) translate([0, 0, pcb_thickness]) rotate([0, 0, -90]) {
         simple_trrs_hole();
         if (preview) {
             %simple_trrs_hole(hole = false);
@@ -90,27 +90,40 @@ module crkbd_top_case(raised = raised) {
     }
 }
 
+module battery(){
+    translate([20,-5,0])rotate([180,0,0])translate([0,0,-wall_thickness])flexbatter18650P(n=1);
+        translate([20,-29,0]) color("red") cube([68.5,14,wall_thickness]);
+        translate([26,-21,-10]) color("blue") cube([5,5,10]);
+        translate([42,-21,-10]) color("green") cube([5,5,10]);
+}
 module crkbd_bottom_case(raised = raised) {
-    difference() {
-        color(case_color) linear_extrude(height = wall_thickness, center = false, convexity = 3) crkbd_left_bottom();
-        translate([0, 0, -wall_thickness]) screw_positions(crkbd_screw_holes) polyhole(r = screw_rad / 2, h = 50);
+   union() {
+        difference() {
+            color(case_color) linear_extrude(height = wall_thickness, center = false, convexity = 3) crkbd_left_bottom();
+            translate([0, 0, -wall_thickness]) screw_positions(crkbd_screw_holes) polyhole(r = screw_rad , h = 50);
+        }
+        
+        battery();
     }
 }
 
 holder_offset = [9.685, -112.5, 0];
 module crkbd_holder_profile() {
     translate(holder_offset) square([119.7, 30], center = false);
+
 }
 
 module crkbd_carrier_profile(expand = 4, holder = false) {
     crkbd_outer_profile(expand);
+    // 
     crkbd_expand_profile(expand) {
+        // battery();
         // Space for magnetic micro usb plug
-        translate([129, -33.3]) square([11, 10], center = false);
+        translate([10, -33.3]) square([90, 40], center = false);
         // Compartment for cables, tent legs etc
-        if (holder) {
-            crkbd_holder_profile();
-        }
+        // if (holder) {
+        //     crkbd_holder_profile();
+        // }
     }
 }
 
@@ -188,16 +201,17 @@ module crkbd_carrier() {
                         }
                     }
                 }
+                // battery();
             }
-        translate(holder_offset - [5.45, -10, bottom_case_height + plate_thickness + 0.1])
-        crkbd_carrier_door();
+        // translate(holder_offset - [5.45, -10, bottom_case_height + plate_thickness + 0.1])
+        // crkbd_carrier_door();
     }
-    //translate([0, 0, 0]) render() crkbd_carrier_inset();
-//            translate(holder_offset-[6, 10, 0]) cube([39, 20, 50], center = false);
+    // translate([0, 0, 0]) render() crkbd_carrier_inset();
+    //        translate(holder_offset-[6, 10, 0]) cube([39, 20, 50], center = false);
 }
 
 
-part = "assembly";
+part = "carrier";
 explode = 0.5;
 depressed = true;
 raised = false;
